@@ -97,32 +97,104 @@ Where:
 ---
 
 ## Program
+```
+import gymnasium as gym
+import numpy as np
 
-```python
+# -------------------------------------------------
+# Create FrozenLake environment
+# -------------------------------------------------
+
+env = gym.make("FrozenLake-v1", map_name="4x4", is_slippery=True)
+
+# Access transition model
+env = env.unwrapped
+
+# Number of states and actions
+n_states = env.observation_space.n
+n_actions = env.action_space.n
+
+# Parameters
+gamma = 0.99
+theta = 1e-8
+
+# Random policy: each action has equal probability
+policy = np.ones((n_states, n_actions)) / n_actions
 
 
 # -------------------------------------------------
 # Policy Evaluation Function
 # -------------------------------------------------
 
+import numpy as np
+
+def policy_evaluation(env, policy, gamma=0.99, theta=1e-8):
+    """Evaluates a given policy using iterative policy evaluation."""
+    n_states = env.observation_space.n
+    n_actions = env.action_space.n
+    V = np.zeros(n_states)
+    
+    while True:
+        delta = 0
+        for state in range(n_states):
+            old_value = V[state]
+            new_value = 0
+            for action in range(n_actions):
+                action_probability = policy[state][action]
+                for probability, next_state, reward, terminated in env.P[state][action]:
+                    new_value += action_probability * probability * (reward + gamma * V[next_state] * (not terminated))
+            V[state] = new_value
+            delta = max(delta, abs(old_value - V[state]))
+        if delta < theta:
+            break
+    return V
+
+# -------------------------------------------------
+# Run Policy Evaluation
+# -------------------------------------------------
+
+V, iterations = policy_evaluation(env, policy, gamma, theta)
+
 
 # -------------------------------------------------
 # Display Output
 # -------------------------------------------------
 
-# Change the parameters and observe the results
+print("Name: Anto Williams S")
+print("Register Number: 212224240012")
 
+print("\nNumber of Iterations:", iterations)
+
+print("\nState-Value Function:")
+print(V)
+
+print("\nState-Value Function as 4x4 Grid:")
+
+print(np.round(V.reshape(4,4),4))
+
+
+# Close environment
+env.close()
 ```
-
----
 
 ## Output
 
-```text
+```
 
-Number of Iterations: 
+Number of iterations: 54
+
+State-Value Function:
+[0.01235611 0.01042444 0.01933842 0.00947774 0.01478704 0.
+ 0.03889445 0.         0.03260247 0.08433764 0.13781085 0.
+ 0.         0.17034482 0.43357944 0.        ]
+
 
 State-Value Function as 4x4 Grid:
+[[0.0124 0.0104 0.0193 0.0095]
+ [0.0148 0.     0.0389 0.    ]
+ [0.0326 0.0843 0.1378 0.    ]
+ [0.     0.1703 0.4336 0.    ]]
+
 
 
 
@@ -137,15 +209,6 @@ Iterative policy evaluation was implemented successfully using the Gymnasium Fro
 
 ## Inference
 
-```text
+The experiment demonstrates how a value function can be estimated by repeatedly applying Bellman's expectation equation until convergence.
 
-
-
-```
-
-
-
-
----
-
-
+The number of iterations depends on the discount factor, convergence threshold, and environment transition probabilities.
