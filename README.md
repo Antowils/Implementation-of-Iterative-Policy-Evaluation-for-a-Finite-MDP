@@ -97,6 +97,7 @@ Where:
 ---
 
 ## Program
+Before changing the gamma value:
 ```
 import gymnasium as gym
 import numpy as np
@@ -133,9 +134,11 @@ def policy_evaluation(env, policy, gamma=0.99, theta=1e-8):
     n_states = env.observation_space.n
     n_actions = env.action_space.n
     V = np.zeros(n_states)
-    
+    iterations = 0
+
     while True:
         delta = 0
+        iterations += 1
         for state in range(n_states):
             old_value = V[state]
             new_value = 0
@@ -147,7 +150,90 @@ def policy_evaluation(env, policy, gamma=0.99, theta=1e-8):
             delta = max(delta, abs(old_value - V[state]))
         if delta < theta:
             break
-    return V
+    return V, iterations
+
+# -------------------------------------------------
+# Run Policy Evaluation
+# -------------------------------------------------
+
+V, iterations = policy_evaluation(env, policy, gamma, theta)
+
+
+# -------------------------------------------------
+# Display Output
+# -------------------------------------------------
+
+print("Name: Anto Williams S")
+print("Register Number: 212224240012")
+
+print("\nNumber of Iterations:", iterations)
+
+print("\nState-Value Function:")
+print(V)
+
+print("\nState-Value Function as 4x4 Grid:")
+
+print(np.round(V.reshape(4,4),4))
+
+
+# Close environment
+env.close()
+
+```
+After changing the gamma value:
+```
+import gymnasium as gym
+import numpy as np
+
+# -------------------------------------------------
+# Create FrozenLake environment
+# -------------------------------------------------
+
+env = gym.make("FrozenLake-v1", map_name="4x4", is_slippery=True)
+
+# Access transition model
+env = env.unwrapped
+
+# Number of states and actions
+n_states = env.observation_space.n
+n_actions = env.action_space.n
+
+# Parameters
+gamma = 0.9
+theta = 1e-8
+
+# Random policy: each action has equal probability
+policy = np.ones((n_states, n_actions)) / n_actions
+
+
+# -------------------------------------------------
+# Policy Evaluation Function
+# -------------------------------------------------
+
+import numpy as np
+
+def policy_evaluation(env, policy, gamma=0.9, theta=1e-8):
+    """Evaluates a given policy using iterative policy evaluation."""
+    n_states = env.observation_space.n
+    n_actions = env.action_space.n
+    V = np.zeros(n_states)
+    iterations = 0
+
+    while True:
+        delta = 0
+        iterations += 1
+        for state in range(n_states):
+            old_value = V[state]
+            new_value = 0
+            for action in range(n_actions):
+                action_probability = policy[state][action]
+                for probability, next_state, reward, terminated in env.P[state][action]:
+                    new_value += action_probability * probability * (reward + gamma * V[next_state] * (not terminated))
+            V[state] = new_value
+            delta = max(delta, abs(old_value - V[state]))
+        if delta < theta:
+            break
+    return V, iterations
 
 # -------------------------------------------------
 # Run Policy Evaluation
@@ -178,28 +264,16 @@ env.close()
 ```
 
 ## Output
-
-```
-
-Number of iterations: 54
-
-State-Value Function:
-[0.01235611 0.01042444 0.01933842 0.00947774 0.01478704 0.
- 0.03889445 0.         0.03260247 0.08433764 0.13781085 0.
- 0.         0.17034482 0.43357944 0.        ]
+# Before changing the gamma value:
 
 
-State-Value Function as 4x4 Grid:
-[[0.0124 0.0104 0.0193 0.0095]
- [0.0148 0.     0.0389 0.    ]
- [0.0326 0.0843 0.1378 0.    ]
- [0.     0.1703 0.4336 0.    ]]
+<img width="635" height="333" alt="image" src="https://github.com/user-attachments/assets/69f4d9c2-d543-448e-9f76-54e3caf69cfc" />
+
+# After changing the gamma value:
 
 
+<img width="745" height="332" alt="image" src="https://github.com/user-attachments/assets/b470e29e-93d3-453f-9735-87c6e4c13076" />
 
-
-```
----
 
 ## Result
 
